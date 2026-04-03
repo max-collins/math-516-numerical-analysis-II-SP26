@@ -1,11 +1,3 @@
-"""
-**Goal:** Handle the mapping between a "Reference Interval" (e.g., $[-1, 1]$) and a "Physical Interval" $[a, b]$.
-
-- **Methods:** - `pull_back(x)`: Maps $x \in [a, b] \to \hat{x} \in [\hat{a}, \hat{b}]$.
-  - `push_forward(hat_x)`: Maps $\hat{x} \in [\hat{a}, \hat{b}] \to x \in [a, b]$.
-- **Math:** $x = a + \frac{\hat{x} - \hat{a}}{\hat{b} - \hat{a}}(b - a)$.
-- **Note:** All other basis implementations will inherit from this class to gain domain-flexibility.
-"""
 from numanalysislib.basis._abstract import PolynomialBasis
 import numpy as np
 
