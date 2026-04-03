@@ -50,8 +50,7 @@ class AffinePolynomialBasis(PolynomialBasis):
         Returns the coefficients array.
         """
         x_nodes_hat = self.pull_back(x_nodes)
-        y_nodes_hat = self.pull_back(y_nodes)
-        return self.basis.fit(x_nodes_hat, y_nodes_hat)
+        return self.basis.fit(x_nodes_hat, y_nodes)
 
 
     def pull_back(self, x: float) -> float:
