@@ -59,6 +59,19 @@ class TestAffinePower:
             basis = PowerBasis(10)
             affine = AffinePolynomialBasis(basis, a=a, b=b)
 
+    def test_fit_evaluate(self):
+        power = PowerBasis(1)
+        a = 0.0
+        b = 0.5
+        affine = AffinePolynomialBasis(power, a, b)
+        x_vals = np.array([0.0, 0.5])
+        y_vals = np.array([0.0, 0.5])
+        coeffs = affine.fit(x_vals, y_vals)
+        pred_y_vals = affine.evaluate(coeffs, x_vals)
+        
+        np.testing.assert_allclose(pred_y_vals, y_vals, atol = 1e-12)
+
+
 class TestAffinePlotter:
 
     @pytest.fixture
