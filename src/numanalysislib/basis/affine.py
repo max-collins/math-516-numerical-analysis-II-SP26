@@ -29,7 +29,12 @@ class AffinePolynomialBasis(PolynomialBasis):
     def evaluate_basis(self, index: int, x: np.ndarray) -> np.ndarray:
         """
         Evaluate the i-th basis function at points x.
-        phi_i(x)
+        Args:
+            - index: index of basis function to evaluate
+            - x: position to evaluate at
+
+        Returns:
+            - phi_i(x)
         """
         x_hat = self.pull_back(x)
         x_hat_eval = self.basis.evaluate_basis(index, x_hat)
@@ -39,7 +44,13 @@ class AffinePolynomialBasis(PolynomialBasis):
     def fit(self, x_nodes: np.ndarray, y_nodes: np.ndarray) -> np.ndarray:
         """
         Computes the coefficients c such that p(x_nodes) = y_nodes.
-        Returns the coefficients array.
+        
+        Args:
+            - x_nodes: x positions in physical space to fit onto
+            - y_nodes: function values to fit to
+        
+        Returns:
+            - coefficients for fit basis
         """
         x_nodes_hat = self.pull_back(x_nodes)
         return self.basis.fit(x_nodes_hat, y_nodes)
@@ -49,10 +60,10 @@ class AffinePolynomialBasis(PolynomialBasis):
         """
         Maps $x \in [a, b] \to \hat{x} \in [\hat{a}, \hat{b}]
 
-        Inputs:
+        Args:
         x: element of physical interval to be mapped into reference interval
 
-        Outputs:
+        Returns:
         hat_x: corresponding element in reference interval
         """
         return self.a_hat + (x - self.a)/(self.b - self.a)*(self.b_hat - self.a_hat)
@@ -61,10 +72,10 @@ class AffinePolynomialBasis(PolynomialBasis):
         """
         Maps $\hat{x} \in [\hat{a}, \hat{b}] \to x \in [a, b]$.  
 
-        Inputs:
+        Args:
         hat_x: element of reference interval to be mapped into physical interval
 
-        Outputs:
+        Returns:
         x: corresponding element in physical interval
         """
         return self.a + (hat_x - self.a_hat)/(self.b_hat - self.a_hat)*(self.b - self.a)
