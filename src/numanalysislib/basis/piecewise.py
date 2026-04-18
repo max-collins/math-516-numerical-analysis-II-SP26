@@ -7,10 +7,12 @@ import warnings
 class PiecewisePolynomial(PolynomialBasis):
     def __init__(self, basis_type: PolynomialBasis, mesh: np.array):
         """
-        :param basis_type: Type of Polynomial basis to use
-        :type basis_type: PolynomialBasis
-        :param mesh: Mesh points 
-        :type mesh: np.array
+        Parameters
+        ----------
+        basis_type : PolynomialBasis
+            Type of Polynomial basis to use
+        mesh : np.array
+            Mesh points (in increasing order)
         """
         self.basis_type = basis_type
 
@@ -21,9 +23,7 @@ class PiecewisePolynomial(PolynomialBasis):
         self.degree = basis_type.degree
         self.n_dofs = basis_type.n_dofs
 
-        self.mesh = []
-        for index in range(len(mesh) - 1):
-            self.mesh.append((mesh[index], mesh[index + 1]))
+        self.mesh = [(mesh[index], mesh[index + 1]) for index in range(len(mesh) - 1)]
         #check that mesh has no overlaps
         for index in range(len(self.mesh)-1):
             element1 = self.mesh[index]
@@ -43,10 +43,15 @@ class PiecewisePolynomial(PolynomialBasis):
         """
         Fit each element to specific y_values
 
-        :param y_mesh: list of numpy arrays. Each array contains the points to fit to. Number of points must match DOF.
-        :type y_mesh: list
-        :return: dictionary specifying the map from element -> coefficients
-        :rtype: dict
+        Parameters
+        ----------
+        y_mesh : list
+            List of numpy arrays. Each array contains the points to fit to. Number of points must match DOF.
+
+        Returns
+        -------
+        dict
+            Dictionary specifying the map from element -> coefficients
         """
         bases_coeffs = {}
 
@@ -79,14 +84,14 @@ class PiecewisePolynomial(PolynomialBasis):
 
         return bases_coeffs
     
-    def float_evaluate_basis(self, index: int, x: float) -> float:
+    def _binary_search(self, x):
         """
-        single float x implementation for basis evaluation
+        Binary search for element containing x and return the index
         """
         min_index = 0
         max_index = len(self.mesh)
-        current_index = min_index + (max_index - min_index)//2
         for _ in range(len(self.mesh)):
+            current_index = min_index + (max_index - min_index)//2
             element = self.mesh[current_index]
             a = element[0]
             b = element[1]
@@ -95,56 +100,59 @@ class PiecewisePolynomial(PolynomialBasis):
             elif x > b:
                 min_index = current_index
             else:
-                return self.bases[element].evaluate_basis(index, x) 
+                return current_index
             
-            current_index = min_index + (max_index - min_index)//2
         # throw a warning if the loop finishes
         warnings.warn("no interval found")
+    
+    def _float_evaluate_basis(self, index: int, x: float) -> float:
+        """
+        single float x implementation for basis evaluation
+        """
+        x_index = self._binary_search(x) #find index of element containing x
+        element = self.mesh[x_index]
+        return self.bases[element].evaluate_basis(index, x) #use evaluate_basis method for element containing x
     
     def evaluate_basis(self, index: int, x: np.array) -> np.array:
         """
         Evaluate specified basis function at specific points
 
-        :param index: index of basis function to evaluate
-        :type index: int
-        :param x: points to evaluate at
-        :type x: np.array
-        :rtype: np.array
-        """
-        return np.vectorize(lambda y: self.float_evaluate_basis(index, y))(x)
+        Parameters
+        ----------
+        index : int
+            Index of basis function to evaluate
+        x : np.array
+            Points to evaluate at
 
-    def float_evaluate(self, coefficients: dict, x: float) -> float:
+        Returns
+        -------
+        np.array
+        """
+        return np.vectorize(lambda y: self._float_evaluate_basis(index, y))(x)
+
+    def _float_evaluate(self, coefficients: dict, x: float) -> float:
         """
         single float x implementation for evaluation
         """
+        x_index = self._binary_search(x) #find element containing x
+        element = self.mesh[x_index]
+        return self.bases[element].evaluate(coefficients[element], x)  #use evaluate method for element containing x
 
-        min_index = 0
-        max_index = len(self.mesh)
-        current_index = min_index + (max_index - min_index)//2
-        for _ in range(len(self.mesh)):
-            element = self.mesh[current_index]
-            a = element[0]
-            b = element[1]
-            if x < a:
-                max_index = current_index
-            elif x > b:
-                min_index = current_index
-            else:
-                return self.bases[element].evaluate(coefficients[element], x) 
-            
-            current_index = min_index + (max_index - min_index)//2
-        # throw a warning if the loop finishes
-        warnings.warn("no interval found")
     
     #overwrites output type
     def evaluate(self, coefficients: dict, x: np.array) -> np.array:
         """
         Evaluate polynomial with coefficients at specified points
 
-        :param coefficients: coefficients for each element
-        :type coefficients: dict
-        :param x: points to evaluate at
-        :type x: np.array
-        :rtype: np.array
+        Parameters
+        ----------
+        coefficients : dict
+            Coefficients for each element
+        x : np.array
+            Points to evaluate at
+
+        Returns
+        -------
+        np.array
         """
-        return np.vectorize(lambda y: self.float_evaluate(coefficients, y))(x)
+        return np.vectorize(lambda y: self._float_evaluate(coefficients, y))(x)
